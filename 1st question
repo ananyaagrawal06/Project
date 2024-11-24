@@ -2,8 +2,8 @@ write shell script to install jenkins
 	- idependent of os dependency
 	- must provide version to install
  SHELL SCRIPT
- #!/bin/bash
 
+ #!/bin/bash
 #install Jenkins
 function install_jenkins {
   # Update reps
