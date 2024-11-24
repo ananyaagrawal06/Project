@@ -1,0 +1,66 @@
+Build Java app and trigger pipeline using different methods
+	- Polling
+	- if there is a code commit and in that case will get executed
+	- Ensure that if pipeline is running for more than a minute it should fail.
+	- Publish artifacts.
+	- Use concept of Parameters to execute different branch
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+pipeline {   
+    agent any 
+    tools{
+        jdk 'jdk11'
+        maven 'maven3'
+    }
+    
+    options {
+        timeout(time: 5, unit: 'MINUTES') //  for timeout 
+    }
+
+   
+    parameters {
+        string(name: 'BRANCH', defaultValue: 'main', description: 'Branch to build')
+    }
+
+    stages {
+        stage('Git Checkout') {
+            steps {
+               
+                git branch: "${params.BRANCH}", 
+                url: 'https://github.com/ananyaagrawal06/Project/new/main'
+            }
+        }
+        
+        stage('Compile') {
+            steps {
+                sh "mvn compile"
+                 }
+        }
+        
+        stage('Package') {
+            steps {
+                sh "mvn clean package"
+                
+                 }
+        }
+        stage('Publish Artifacts') {
+            steps {
+                echo "Publishing artifacts..."
+                archiveArtifacts artifacts: '/target/*.jar', allowEmptyArchive: true
+            }
+        }
+        
+         
+    }
+    
+      
+    post {
+        success {
+            echo "Pipeline completed successfully for branch ${params.BRANCH}"
+        }
+        failure {
+            echo "Pipeline failed for branch ${params.BRANCH}"
+        }
+    }
+}
