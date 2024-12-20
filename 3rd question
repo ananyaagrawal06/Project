@@ -1,0 +1,51 @@
+pipeline {
+    agent any
+    environment {
+        REPO_URL = 'https://github.com/ananyaagrawal06/pipeline.git'
+        BRANCH = 'main'  // Update to the appropriate branch name
+    }
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git branch: "${BRANCH}", url: "${REPO_URL}"
+            }
+        }
+        stage('Monitor Disk Utilization') {
+            steps {
+                echo 'Checking Disk Utilization...'
+                sh 'chmod +x disk.sh'
+                script {
+                    // Run the script and capture the exit status
+                    def status = sh(
+                        script: './disk.sh',
+                        returnStatus: true // Capture only the exit status, not the output
+                    )
+
+                    // Check the exit status and decide whether to send an email
+                    if (status != 0) { // Exit status 0 means success; non-zero means failure
+                        echo "Disk usage exceeded threshold. Sending email..."
+                        sh '''
+                            echo "Disk usage critical. Please take necessary action!" | mail -s "Disk Utilization Alert" ananyaagrawal.off@gmail.com
+                        '''
+                    } else {
+                        echo "Disk usage is under control."
+                    }
+                }
+            }
+        }
+        stage('Process Management') {
+            steps {
+                echo 'Executing Process Management Script...'
+                sh 'chmod +x process.sh && ./process.sh'
+            }
+        }
+    }
+    post {
+        success {
+            echo 'Pipeline executed successfully!'
+        }
+        failure {
+            echo 'Pipeline execution failed. Check logs for details.'
+        }
+    }
+}
